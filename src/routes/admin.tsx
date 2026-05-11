@@ -1,8 +1,9 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import QRCode from "qrcode";
-import { ArrowLeft, Copy, Download, LogOut, Pencil, Trash2 } from "lucide-react";
+import { ArrowLeft, Copy, Download, Link as LinkIcon, LogOut, Pencil, Trash2, Upload, X } from "lucide-react";
 import { adminAuth, cardsStore, type Card } from "@/lib/cards";
+import { approxKbFromDataUrl, fileToCompressedDataUrl } from "@/lib/image-utils";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
@@ -144,14 +145,8 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
           <Input value={title} onChange={(e) => setTitle(e.target.value)} required />
         </div>
         <div className="space-y-2">
-          <label className="handwritten text-ink/80">URL da imagem</label>
-          <Input
-            type="url"
-            value={imageUrl}
-            onChange={(e) => setImageUrl(e.target.value)}
-            placeholder="https://..."
-            required
-          />
+          <label className="handwritten text-ink/80">Imagem da carta</label>
+          <ImageField value={imageUrl} onChange={setImageUrl} />
         </div>
         <div className="space-y-2">
           <label className="handwritten text-ink/80">Cartinha</label>
@@ -281,6 +276,117 @@ function CardRow({ card, onEdit }: { card: Card; onEdit: () => void }) {
           <Trash2 className="h-4 w-4 text-destructive" />
         </Button>
       </div>
+    </div>
+  );
+}
+
+function ImageField({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  const [mode, setMode] = useState<"upload" | "url">(
+    value.startsWith("data:") || !value ? "upload" : "url",
+  );
+  const [loading, setLoading] = useState(false);
+  const [err, setErr] = useState("");
+  const fileRef = useRef<HTMLInputElement>(null);
+
+  const handleFile = async (file: File) => {
+    setErr("");
+    setLoading(true);
+    try {
+      const dataUrl = await fileToCompressedDataUrl(file);
+      const kb = approxKbFromDataUrl(dataUrl);
+      if (kb > 2500) {
+        setErr(`Imagem muito grande (${kb}KB). Tente uma menor.`);
+      } else {
+        onChange(dataUrl);
+      }
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : "Falha ao ler imagem");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="space-y-2">
+      <div className="flex gap-1 text-xs">
+        <button
+          type="button"
+          onClick={() => setMode("upload")}
+          className={`px-3 py-1 rounded-full handwritten ${mode === "upload" ? "bg-rose text-primary-foreground" : "bg-muted text-ink/70"}`}
+        >
+          <Upload className="h-3 w-3 inline mr-1" /> Upload
+        </button>
+        <button
+          type="button"
+          onClick={() => setMode("url")}
+          className={`px-3 py-1 rounded-full handwritten ${mode === "url" ? "bg-rose text-primary-foreground" : "bg-muted text-ink/70"}`}
+        >
+          <LinkIcon className="h-3 w-3 inline mr-1" /> URL
+        </button>
+      </div>
+
+      {mode === "upload" ? (
+        <div
+          onDragOver={(e) => e.preventDefault()}
+          onDrop={(e) => {
+            e.preventDefault();
+            const f = e.dataTransfer.files?.[0];
+            if (f) handleFile(f);
+          }}
+          onClick={() => fileRef.current?.click()}
+          className="border-2 border-dashed border-border rounded-xl p-4 text-center cursor-pointer hover:bg-muted/40 transition-colors"
+        >
+          <input
+            ref={fileRef}
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={(e) => {
+              const f = e.target.files?.[0];
+              if (f) handleFile(f);
+            }}
+          />
+          {loading ? (
+            <p className="handwritten text-ink/70">Processando...</p>
+          ) : (
+            <p className="handwritten text-ink/70">
+              Clique ou arraste uma imagem aqui
+            </p>
+          )}
+        </div>
+      ) : (
+        <Input
+          type="url"
+          value={value.startsWith("data:") ? "" : value}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder="https://..."
+        />
+      )}
+
+      {value && (
+        <div className="relative inline-block">
+          <img
+            src={value}
+            alt="preview"
+            className="h-24 w-24 object-cover rounded-md border border-border"
+          />
+          <button
+            type="button"
+            onClick={() => onChange("")}
+            className="absolute -top-2 -right-2 bg-destructive text-destructive-foreground rounded-full p-1"
+            title="Remover"
+          >
+            <X className="h-3 w-3" />
+          </button>
+          {value.startsWith("data:") && (
+            <p className="text-[10px] text-ink/60 font-body mt-1">
+              {approxKbFromDataUrl(value)} KB salvo localmente
+            </p>
+          )}
+        </div>
+      )}
+
+      {err && <p className="text-destructive text-sm handwritten">{err}</p>}
     </div>
   );
 }

@@ -110,7 +110,7 @@ function Index() {
   );
 }
 
-function EmptyState({ onScan }: { onScan: () => void }) {
+function EmptyState(_: { onScan: () => void }) {
   return (
     <div className="flex flex-col items-center text-center gap-6 mt-12 px-4">
       <div className="relative">
@@ -129,13 +129,9 @@ function EmptyState({ onScan }: { onScan: () => void }) {
           deixe a magia acontecer 💌
         </p>
       </div>
-      <button
-        onClick={onScan}
-        className="flex items-center gap-3 px-8 py-4 rounded-full bg-rose text-primary-foreground shadow-lg hover:scale-105 transition-transform"
-      >
-        <QrCode className="h-5 w-5" />
-        <span className="handwritten text-xl">Abrir scanner</span>
-      </button>
+      <p className="handwritten text-ink/55 text-sm">
+        Use o botão abaixo para abrir o scanner ↓
+      </p>
     </div>
   );
 }

@@ -65,6 +65,13 @@ export const cardsStore = {
     }
     return { card: cards[idx], wasNew };
   },
+  update(id: string, patch: Partial<Pick<Card, "title" | "imageUrl" | "letter">>) {
+    const cards = read();
+    const idx = cards.findIndex((c) => c.id === id);
+    if (idx === -1) return;
+    cards[idx] = { ...cards[idx], ...patch };
+    write(cards);
+  },
   remove(id: string) {
     write(read().filter((c) => c.id !== id));
   },

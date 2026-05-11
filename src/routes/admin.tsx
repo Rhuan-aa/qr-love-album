@@ -1,8 +1,9 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import QRCode from "qrcode";
-import { ArrowLeft, Copy, Download, LogOut, Pencil, Trash2 } from "lucide-react";
+import { ArrowLeft, Copy, Download, Link as LinkIcon, LogOut, Pencil, Trash2, Upload, X } from "lucide-react";
 import { adminAuth, cardsStore, type Card } from "@/lib/cards";
+import { approxKbFromDataUrl, fileToCompressedDataUrl } from "@/lib/image-utils";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";

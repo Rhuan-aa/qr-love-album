@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import QRCode from "qrcode";
-import { ArrowLeft, Copy, Download, LogOut, Trash2 } from "lucide-react";
+import { ArrowLeft, Copy, Download, LogOut, Pencil, Trash2 } from "lucide-react";
 import { adminAuth, cardsStore, type Card } from "@/lib/cards";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -180,7 +180,7 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
         <h2 className="font-display text-2xl mb-4">Cartas cadastradas ({cards.length})</h2>
         <div className="space-y-3">
           {cards.map((c) => (
-            <CardRow key={c.id} card={c} />
+            <CardRow key={c.id} card={c} onEdit={() => startEdit(c)} />
           ))}
           {cards.length === 0 && (
             <p className="handwritten text-ink/60 text-center py-8">
@@ -233,7 +233,7 @@ function CreatedCardPreview({ card, onClose }: { card: Card; onClose: () => void
   );
 }
 
-function CardRow({ card }: { card: Card }) {
+function CardRow({ card, onEdit }: { card: Card; onEdit: () => void }) {
   const [showQR, setShowQR] = useState(false);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const url = typeof window !== "undefined" ? `${window.location.origin}/unlock/${card.id}` : "";
@@ -267,12 +267,16 @@ function CardRow({ card }: { card: Card }) {
         <Button size="sm" variant="outline" onClick={() => setShowQR((v) => !v)}>
           QR
         </Button>
+        <Button size="sm" variant="outline" onClick={onEdit} title="Editar">
+          <Pencil className="h-4 w-4" />
+        </Button>
         <Button
           size="sm"
           variant="ghost"
           onClick={() => {
             if (confirm("Apagar essa carta?")) cardsStore.remove(card.id);
           }}
+          title="Apagar"
         >
           <Trash2 className="h-4 w-4 text-destructive" />
         </Button>

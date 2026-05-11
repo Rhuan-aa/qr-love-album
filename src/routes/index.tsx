@@ -110,7 +110,7 @@ function Index() {
   );
 }
 
-function EmptyState({ onScan }: { onScan: () => void }) {
+function EmptyState(_: { onScan: () => void }) {
   return (
     <div className="flex flex-col items-center text-center gap-6 mt-12 px-4">
       <div className="relative">

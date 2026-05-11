@@ -144,14 +144,8 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
           <Input value={title} onChange={(e) => setTitle(e.target.value)} required />
         </div>
         <div className="space-y-2">
-          <label className="handwritten text-ink/80">URL da imagem</label>
-          <Input
-            type="url"
-            value={imageUrl}
-            onChange={(e) => setImageUrl(e.target.value)}
-            placeholder="https://..."
-            required
-          />
+          <label className="handwritten text-ink/80">Imagem da carta</label>
+          <ImageField value={imageUrl} onChange={setImageUrl} />
         </div>
         <div className="space-y-2">
           <label className="handwritten text-ink/80">Cartinha</label>

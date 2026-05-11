@@ -66,10 +66,12 @@ function AdminPage() {
 
 function AdminDashboard({ onLogout }: { onLogout: () => void }) {
   const [cards, setCards] = useState<Card[]>([]);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [title, setTitle] = useState("");
   const [imageUrl, setImageUrl] = useState("");
   const [letter, setLetter] = useState("");
   const [created, setCreated] = useState<Card | null>(null);
+  const formRef = useRef<HTMLFormElement>(null);
 
   useEffect(() => {
     setCards(cardsStore.list());
@@ -78,14 +80,33 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
     return () => window.removeEventListener("love-album:update", sync);
   }, []);
 
-  const submit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!title || !imageUrl || !letter) return;
-    const c = cardsStore.create({ title, imageUrl, letter });
-    setCreated(c);
+  const resetForm = () => {
+    setEditingId(null);
     setTitle("");
     setImageUrl("");
     setLetter("");
+  };
+
+  const startEdit = (c: Card) => {
+    setEditingId(c.id);
+    setTitle(c.title);
+    setImageUrl(c.imageUrl);
+    setLetter(c.letter);
+    setCreated(null);
+    formRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+
+  const submit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!title || !imageUrl || !letter) return;
+    if (editingId) {
+      cardsStore.update(editingId, { title, imageUrl, letter });
+      resetForm();
+    } else {
+      const c = cardsStore.create({ title, imageUrl, letter });
+      setCreated(c);
+      resetForm();
+    }
   };
 
   return (
@@ -111,10 +132,13 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
       <h1 className="font-display text-4xl text-rose mb-6">Painel do Criador</h1>
 
       <form
+        ref={formRef}
         onSubmit={submit}
         className="bg-card border border-border rounded-2xl p-6 space-y-4 shadow-md"
       >
-        <h2 className="font-display text-2xl">Nova carta</h2>
+        <h2 className="font-display text-2xl">
+          {editingId ? "Editando carta" : "Nova carta"}
+        </h2>
         <div className="space-y-2">
           <label className="handwritten text-ink/80">Título</label>
           <Input value={title} onChange={(e) => setTitle(e.target.value)} required />
@@ -138,9 +162,16 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
             required
           />
         </div>
-        <Button type="submit" className="w-full bg-rose hover:bg-rose/90">
-          Criar carta + gerar QR
-        </Button>
+        <div className="flex gap-2">
+          <Button type="submit" className="flex-1 bg-rose hover:bg-rose/90">
+            {editingId ? "Salvar alterações" : "Criar carta + gerar QR"}
+          </Button>
+          {editingId && (
+            <Button type="button" variant="outline" onClick={resetForm}>
+              Cancelar
+            </Button>
+          )}
+        </div>
       </form>
 
       {created && <CreatedCardPreview card={created} onClose={() => setCreated(null)} />}

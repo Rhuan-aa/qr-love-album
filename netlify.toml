@@ -1,8 +1,9 @@
 [build]
   command = "npm run build"
-  publish = ".netlify/dist"
+  publish = "dist/client"
 
 [functions]
+  directory = "dist/server"
   node_bundler = "esbuild"
 
 [[redirects]]

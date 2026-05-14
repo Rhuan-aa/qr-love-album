@@ -1,0 +1,18 @@
+{
+  "version": 2,
+  "public": true,
+  "github": {
+    "silent": true
+  },
+  "rewrites": [
+    { "source": "/assets/(.*)", "destination": "/dist/client/assets/$1" },
+    { "source": "/(.*)", "destination": "/dist/server/server.js" }
+  ],
+  "functions": {
+    "dist/server/server.js": {
+      "runtime": "nodejs20.x",
+      "memory": 1024,
+      "maxDuration": 10
+    }
+  }
+}

@@ -3,6 +3,7 @@
   publish = "dist/client"
 
 [functions]
+  directory = "dist/server"
   node_bundler = "esbuild"
 
 [[redirects]]

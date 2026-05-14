@@ -15,46 +15,68 @@ const ADMIN_KEY = "love-album:admin";
 export const ADMIN_PASSWORD = "meu-amor-2026";
 
 // Turso Database Client
+const dbUrl = process.env.TURSO_DATABASE_URL;
+const dbToken = process.env.TURSO_AUTH_TOKEN;
+
+if (!dbUrl) {
+  console.error("TURSO_DATABASE_URL is not defined in environment variables");
+}
+
 const db = createClient({
-  url: process.env.TURSO_DATABASE_URL || "file:local.db",
-  authToken: process.env.TURSO_AUTH_TOKEN,
+  url: dbUrl || "file:local.db",
+  authToken: dbToken,
 });
 
 // Server Functions
 export const listCards = createServerFn({ method: "GET" })
   .handler(async () => {
-    const { rows } = await db.execute("SELECT * FROM cards ORDER BY createdAt ASC");
-    return rows as unknown as Card[];
+    try {
+      const { rows } = await db.execute("SELECT * FROM cards ORDER BY createdAt ASC");
+      return rows as unknown as Card[];
+    } catch (error) {
+      console.error("Error in listCards:", error);
+      throw error;
+    }
   });
 
 export const getCard = createServerFn({ method: "GET" })
   .inputValidator((id: string) => id)
   .handler(async ({ data: id }) => {
-    const { rows } = await db.execute({
-      sql: "SELECT * FROM cards WHERE id = ?",
-      args: [id],
-    });
-    return (rows[0] as unknown as Card) || null;
+    try {
+      const { rows } = await db.execute({
+        sql: "SELECT * FROM cards WHERE id = ?",
+        args: [id],
+      });
+      return (rows[0] as unknown as Card) || null;
+    } catch (error) {
+      console.error("Error in getCard:", error);
+      throw error;
+    }
   });
 
 export const createCard = createServerFn({ method: "POST" })
   .inputValidator((input: { title: string; imageUrl: string; letter: string }) => input)
   .handler(async ({ data: input }) => {
-    const card: Card = {
-      id: uuid(),
-      title: input.title,
-      imageUrl: input.imageUrl,
-      letter: input.letter,
-      createdAt: Date.now(),
-      unlockedAt: null,
-    };
+    try {
+      const card: Card = {
+        id: uuid(),
+        title: input.title,
+        imageUrl: input.imageUrl,
+        letter: input.letter,
+        createdAt: Date.now(),
+        unlockedAt: null,
+      };
 
-    await db.execute({
-      sql: "INSERT INTO cards (id, title, imageUrl, letter, createdAt, unlockedAt) VALUES (?, ?, ?, ?, ?, ?)",
-      args: [card.id, card.title, card.imageUrl, card.letter, card.createdAt, card.unlockedAt],
-    });
+      await db.execute({
+        sql: "INSERT INTO cards (id, title, imageUrl, letter, createdAt, unlockedAt) VALUES (?, ?, ?, ?, ?, ?)",
+        args: [card.id, card.title, card.imageUrl, card.letter, card.createdAt, card.unlockedAt],
+      });
 
-    return card;
+      return card;
+    } catch (error) {
+      console.error("Error in createCard:", error);
+      throw error;
+    }
   });
 
 export const updateCard = createServerFn({ method: "POST" })

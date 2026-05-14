@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import QRCode from "qrcode";
 import { ArrowLeft, Copy, Download, Link as LinkIcon, LogOut, Pencil, Trash2, Upload, X } from "lucide-react";
-import { adminAuth, cardsStore, type Card } from "@/lib/cards";
+import { adminAuth, listCards, createCard, updateCard, deleteCard, type Card } from "@/lib/cards";
 import { approxKbFromDataUrl, fileToCompressedDataUrl } from "@/lib/image-utils";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -72,13 +72,16 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
   const [imageUrl, setImageUrl] = useState("");
   const [letter, setLetter] = useState("");
   const [created, setCreated] = useState<Card | null>(null);
+  const [loading, setLoading] = useState(false);
   const formRef = useRef<HTMLFormElement>(null);
 
+  const fetchCards = async () => {
+    const data = await listCards();
+    setCards(data);
+  };
+
   useEffect(() => {
-    setCards(cardsStore.list());
-    const sync = () => setCards(cardsStore.list());
-    window.addEventListener("love-album:update", sync);
-    return () => window.removeEventListener("love-album:update", sync);
+    fetchCards();
   }, []);
 
   const resetForm = () => {
@@ -97,16 +100,29 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
     formRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
 
-  const submit = (e: React.FormEvent) => {
+  const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!title || !imageUrl || !letter) return;
-    if (editingId) {
-      cardsStore.update(editingId, { title, imageUrl, letter });
-      resetForm();
-    } else {
-      const c = cardsStore.create({ title, imageUrl, letter });
-      setCreated(c);
-      resetForm();
+    setLoading(true);
+    try {
+      if (editingId) {
+        await updateCard({ id: editingId, patch: { title, imageUrl, letter } });
+        resetForm();
+      } else {
+        const c = await createCard({ title, imageUrl, letter });
+        setCreated(c);
+        resetForm();
+      }
+      await fetchCards();
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const onDelete = async (id: string) => {
+    if (confirm("Apagar essa carta?")) {
+      await deleteCard(id);
+      await fetchCards();
     }
   };
 
@@ -158,8 +174,8 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
           />
         </div>
         <div className="flex gap-2">
-          <Button type="submit" className="flex-1 bg-rose hover:bg-rose/90">
-            {editingId ? "Salvar alterações" : "Criar carta + gerar QR"}
+          <Button type="submit" className="flex-1 bg-rose hover:bg-rose/90" disabled={loading}>
+            {loading ? "Processando..." : editingId ? "Salvar alterações" : "Criar carta + gerar QR"}
           </Button>
           {editingId && (
             <Button type="button" variant="outline" onClick={resetForm}>
@@ -175,7 +191,7 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
         <h2 className="font-display text-2xl mb-4">Cartas cadastradas ({cards.length})</h2>
         <div className="space-y-3">
           {cards.map((c) => (
-            <CardRow key={c.id} card={c} onEdit={() => startEdit(c)} />
+            <CardRow key={c.id} card={c} onEdit={() => startEdit(c)} onDelete={() => onDelete(c.id)} />
           ))}
           {cards.length === 0 && (
             <p className="handwritten text-ink/60 text-center py-8">
@@ -228,7 +244,7 @@ function CreatedCardPreview({ card, onClose }: { card: Card; onClose: () => void
   );
 }
 
-function CardRow({ card, onEdit }: { card: Card; onEdit: () => void }) {
+function CardRow({ card, onEdit, onDelete }: { card: Card; onEdit: () => void; onDelete: () => void }) {
   const [showQR, setShowQR] = useState(false);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const url = typeof window !== "undefined" ? `${window.location.origin}/unlock/${card.id}` : "";
@@ -268,9 +284,7 @@ function CardRow({ card, onEdit }: { card: Card; onEdit: () => void }) {
         <Button
           size="sm"
           variant="ghost"
-          onClick={() => {
-            if (confirm("Apagar essa carta?")) cardsStore.remove(card.id);
-          }}
+          onClick={onDelete}
           title="Apagar"
         >
           <Trash2 className="h-4 w-4 text-destructive" />

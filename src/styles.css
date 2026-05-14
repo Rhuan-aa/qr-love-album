@@ -1,3 +1,4 @@
+@import url("https://fonts.googleapis.com/css2?family=Caveat:wght@400;600;700&family=Patrick+Hand&family=Homemade+Apple&display=swap");
 @import "tailwindcss" source(none);
 @source "../src";
 @import "tw-animate-css";
@@ -100,9 +101,6 @@
     letter-spacing: 0.01em;
   }
 }
-
-/* Import Google Fonts */
-@import url("https://fonts.googleapis.com/css2?family=Caveat:wght@400;600;700&family=Patrick+Hand&family=Homemade+Apple&display=swap");
 
 /* ===== TCG Card / Polaroid styles ===== */
 

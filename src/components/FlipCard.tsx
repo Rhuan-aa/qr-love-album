@@ -38,26 +38,15 @@ export function FlipCard({ card, locked, flipped, revealing, onClick }: Props) {
           <span className="tape tape-tr" />
         </div>
 
-        {/* BACK — image + letter */}
+        {/* BACK — full image */}
         {card && (
           <div className="tcg-card-face tcg-card-back bg-card">
-            <div className="absolute inset-0 flex flex-col">
-              <div className="relative h-1/2 w-full overflow-hidden">
-                <img
-                  src={card.imageUrl}
-                  alt={card.title}
-                  className="h-full w-full object-cover"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-card via-transparent to-transparent" />
-              </div>
-              <div className="flex flex-1 flex-col gap-2 p-4">
-                <h3 className="handwritten text-2xl leading-tight text-rose">
-                  {card.title}
-                </h3>
-                <p className="handwritten text-base leading-snug text-ink/85 line-clamp-6">
-                  {card.letter}
-                </p>
-              </div>
+            <div className="absolute inset-0">
+              <img
+                src={card.imageUrl}
+                alt={card.title}
+                className="h-full w-full object-cover"
+              />
             </div>
             <span className="tape tape-tl" />
             <span className="tape tape-tr" />

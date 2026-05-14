@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Heart, QrCode, Sparkles, Lock } from "lucide-react";
-import { cardsStore, type Card } from "@/lib/cards";
+import { listCards, type Card } from "@/lib/cards";
 import { FlipCard } from "@/components/FlipCard";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 
@@ -15,14 +15,11 @@ function Index() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const sync = () => setCards(cardsStore.list());
-    sync();
-    window.addEventListener("love-album:update", sync);
-    window.addEventListener("storage", sync);
-    return () => {
-      window.removeEventListener("love-album:update", sync);
-      window.removeEventListener("storage", sync);
+    const fetchCards = async () => {
+      const data = await listCards();
+      setCards(data);
     };
+    fetchCards();
   }, []);
 
   const unlocked = cards.filter((c) => c.unlockedAt !== null);

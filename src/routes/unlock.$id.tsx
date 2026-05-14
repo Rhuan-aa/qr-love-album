@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { unlockCard, type Card } from "../lib/cards";
+import { unlockCard, type Card } from "../lib/cards.server";
 import { FlipCard } from "@/components/FlipCard";
 import { Heart } from "lucide-react";
 

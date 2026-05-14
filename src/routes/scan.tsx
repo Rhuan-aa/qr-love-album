@@ -2,7 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { Scanner } from "@yudiel/react-qr-scanner";
 import { ArrowLeft, AlertCircle } from "lucide-react";
-import { extractCardId } from "../lib/cards";
+import { extractCardId } from "../lib/cards.server";
 
 export const Route = createFileRoute("/scan")({
   component: ScanPage,

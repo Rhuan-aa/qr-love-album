@@ -19,8 +19,9 @@ let _db: ReturnType<typeof createClient> | null = null;
 function getDb() {
   if (_db) return _db;
   
-  const dbUrl = process.env.TURSO_DATABASE_URL;
-  const dbToken = process.env.TURSO_AUTH_TOKEN;
+  // Try both process.env and import.meta.env
+  const dbUrl = process.env.TURSO_DATABASE_URL || (import.meta as any).env?.VITE_TURSO_DATABASE_URL;
+  const dbToken = process.env.TURSO_AUTH_TOKEN || (import.meta as any).env?.VITE_TURSO_AUTH_TOKEN;
 
   if (!dbUrl && typeof window === "undefined") {
     console.error("TURSO_DATABASE_URL is not defined in environment variables");

@@ -6,6 +6,7 @@ const handler = createStartHandler({
   renderHandler: defaultRenderHandler,
 });
 
-export default {
-  fetch: (request: Request) => handler(request),
-};
+// Dual compatibility export
+const server = Object.assign(handler, { fetch: handler });
+
+export default server;

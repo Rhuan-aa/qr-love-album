@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Heart, QrCode, Sparkles, Lock } from "lucide-react";
-import { listCards, type Card } from "../lib/cards.server";
+import { listCards, type Card } from "../lib/cards";
 import { FlipCard } from "@/components/FlipCard";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 

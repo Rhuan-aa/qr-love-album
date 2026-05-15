@@ -1,3 +1,5 @@
+'use server';
+
 import { createServerFn } from "@tanstack/react-start";
 import { v4 as uuid } from "uuid";
 import { createClient } from "@libsql/client";
@@ -34,6 +36,18 @@ function getDb() {
   return _db;
 }
 
+export function slugify(text: string): string {
+  return text
+    .toString()
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "") // Remove accents
+    .trim()
+    .replace(/\s+/g, "-") // Replace spaces with -
+    .replace(/[^\w-]+/g, "") // Remove all non-word chars
+    .replace(/--+/g, "-"); // Replace multiple - with single -
+}
+
 // Server Functions
 export const listCards = createServerFn({ method: "GET" })
   .handler(async () => {
@@ -68,8 +82,23 @@ export const createCard = createServerFn({ method: "POST" })
   .handler(async ({ data: input }) => {
     try {
       const db = getDb();
+      
+      // Use slugified title as ID instead of UUID
+      let id = slugify(input.title);
+      
+      // Check if ID already exists to avoid collisions
+      const existing = await db.execute({
+        sql: "SELECT id FROM cards WHERE id = ?",
+        args: [id],
+      });
+      
+      if (existing.rows.length > 0) {
+        // If exists, append a short random string
+        id = `${id}-${Math.random().toString(36).substring(2, 6)}`;
+      }
+
       const card: Card = {
-        id: uuid(),
+        id,
         title: input.title,
         imageUrl: input.imageUrl,
         letter: input.letter,
@@ -188,8 +217,13 @@ export const adminAuth = {
 };
 
 export function extractCardId(text: string): string | null {
-  const m = text.match(/unlock\/([0-9a-f-]{8,})/i);
+  // Capture anything after /unlock/ until a separator or end of string
+  const m = text.match(/unlock\/([^?#/]+)/i);
   if (m) return m[1];
-  if (/^[0-9a-f-]{8,}$/i.test(text.trim())) return text.trim();
+  
+  // If it's just a raw slug (no slashes)
+  const trimmed = text.trim();
+  if (trimmed && !trimmed.includes("/")) return trimmed;
+  
   return null;
 }
